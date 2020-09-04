@@ -6,7 +6,7 @@ export interface AccessTokenResult {
 }
 
 
-/* REAL TYPES RETURNED BY API */
+/* GENERIC TYPES RETURNED BY API */
 
 export type NotificationType = 'answered' | 'question' | 'follow' | 'follow-back';
 
