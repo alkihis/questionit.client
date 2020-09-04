@@ -119,16 +119,19 @@ const url = 'https://questionit.space/appflow?token=' + token_encoded;
 Once user has approved the app, he will be redirected to your redirect URL (or will have an access PIN displayed).
 
 For redirect URLs, there's formed like: 
-`https://yoursite.com?token={token}&validator={validator}`.
+`https://yoursite.com/callback?validator={validator}`.
 
-You can extract both `token` and `validator` from query string, they're needed to generate access token.
+You can extract `validator` from query string, they're needed to generate access token.
 
 ```ts
 import { AccessTokenResult } from 'questionit';
 
 const result: AccessTokenResult = await questionit.getAccessToken(
   'app-key-here',
-  'token-here',
+  // You need to have original token, it should be stored somewhere on your side. 
+  // You can give an unique key into callback URL (like in query),
+  // it will be keeped.
+  'token-here', 
   'validator-or-PIN-here'
 );
 
