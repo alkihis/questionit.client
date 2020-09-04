@@ -1,4 +1,25 @@
-import { AccessTokenResult, WrappedApiError } from "./types";
+import { AccessTokenResult, WrappedApiError } from './types';
+
+// To make TypeScript and Node.js happy.
+var _Headers: { new (init?: Headers | string[][] | Record<string, string> | undefined): Headers; prototype: Headers; };
+var _URLSearchParams: { new (init?: string | URLSearchParams | string[][] | Record<string, string> | undefined): URLSearchParams; prototype: URLSearchParams; toString(): string; };
+var _FormData: { new (form?: HTMLFormElement | undefined): FormData; prototype: FormData; };
+var _fetch: Window['fetch'];
+
+// Node.js
+if (typeof fetch === 'undefined' && typeof global === 'object') {
+  _fetch = require('node-fetch');
+  _FormData = require('form-data');
+  _Headers = require('node-fetch').Headers;
+  _URLSearchParams = require('url').URLSearchParams;
+}
+// Deno/Browser
+else {
+  _fetch = fetch;
+  _FormData = FormData;
+  _Headers = Headers;
+  _URLSearchParams = URLSearchParams;
+}
 
 export type AllowedParams = FormData | AllowedNoBodyParams;
 export type AllowedNoBodyParams =  URLSearchParams | Record<string, string | number | boolean>;
@@ -85,12 +106,12 @@ export class QuestionIt {
 
   protected makeBody(endpoint: string, params: AllowedParams) : URLSearchParams | string | FormData {
     if (QuestionIt.FORM_DATA_ENDPOINTS.includes(endpoint)) {
-      if (params instanceof FormData) {
+      if (params instanceof _FormData) {
         return params;
       }
       else {
-        const fd = new FormData;
-        const entries = params instanceof URLSearchParams ? params : Object.entries(params);
+        const fd = new _FormData;
+        const entries = params instanceof _URLSearchParams ? params : Object.entries(params);
 
         for (const [item, value] of entries) {
           fd.append(item, value.toString());
@@ -100,11 +121,11 @@ export class QuestionIt {
       }
     }
     else {
-      if (params instanceof URLSearchParams) {
+      if (params instanceof _URLSearchParams) {
         return params;
       }
-      else if (params instanceof FormData) {
-        const urlp = new URLSearchParams;
+      else if (params instanceof _FormData) {
+        const urlp = new _URLSearchParams;
 
         for (const [item, value] of params) {
           if (typeof value !== 'string') {
@@ -124,12 +145,12 @@ export class QuestionIt {
   } 
 
   protected makeParams(params: AllowedParams) : URLSearchParams {
-    if (params instanceof URLSearchParams) {
+    if (params instanceof _URLSearchParams) {
       return params;
     }
     else {
-      const urlp = new URLSearchParams;
-      const entries = params instanceof FormData ? params : Object.entries(params);
+      const urlp = new _URLSearchParams;
+      const entries = params instanceof _FormData ? params : Object.entries(params);
 
       for (const [item, value] of entries) {
         if (typeof value !== 'string') {
@@ -152,7 +173,7 @@ export class QuestionIt {
     auth?: boolean | string,
     with_request?: boolean,
   ) {
-    const headers = new Headers(user_headers);
+    const headers = new _Headers(user_headers);
     let url = QuestionIt.PREFIX + endpoint;
     let body: FormData | URLSearchParams | string | undefined = undefined;
 
@@ -172,7 +193,7 @@ export class QuestionIt {
           // JSON encoded
           headers.append('Content-Type', 'application/json');
         }
-        else if (body instanceof URLSearchParams) {
+        else if (body instanceof _URLSearchParams) {
           body = body.toString();
           headers.append('Content-Type', 'application/x-www-form-urlencoded');
         }
@@ -190,7 +211,7 @@ export class QuestionIt {
       headers.append('Authorization', 'Bearer ' + auth);
     }
 
-    return fetch(url, { method, body, headers })
+    return _fetch(url, { method, body, headers })
       .then(this.handleResponse.bind(this, with_request || false)); 
   }
 
