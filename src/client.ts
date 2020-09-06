@@ -215,10 +215,10 @@ export class QuestionIt {
       .then(this.handleResponse.bind(this, with_request || false)); 
   }
 
-  protected handleResponse(with_request: boolean, response: Response) {
+  protected async handleResponse(with_request: boolean, response: Response) {
     // API always replies with JSON, even on error
     const length = response.headers.get('Content-Length');
-    const result = length ? response.json() : Promise.resolve();
+    const result = await (length ? response.json() : Promise.resolve());
 
     if (response.ok) {
       if (with_request)
