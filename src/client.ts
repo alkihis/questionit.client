@@ -230,11 +230,11 @@ export class QuestionIt {
       return result;
     }
 
-    return {
+    return Promise.reject({
       type: 'QuestionItApiError',
       response,
-      result: Promise.reject(result),
-    };
+      result,
+    });
   }
 
   static isApiError(data: any) : data is WrappedApiError {
