@@ -1,1 +1,3 @@
 src
+test.{j,t}s
+test.d.ts

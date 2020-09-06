@@ -398,8 +398,15 @@ export class QuestionIt {
         const entries = params instanceof _URLSearchParams ? params : Object.entries(params);
 
         for (const [item, value] of entries) {
-          if (value !== undefined)
+          if (value === undefined)
+            continue;
+          
+          if (typeof value !== 'object') {
             fd.append(item, value.toString());
+          }
+          else {
+            fd.append(item, value);
+          }
         }
 
         return fd;
@@ -489,7 +496,13 @@ export class QuestionIt {
           headers.append('Content-Type', 'application/x-www-form-urlencoded');
         }
         else {
-          headers.append('Content-Type', 'multipart/form-data');
+          if (typeof global !== 'undefined') {
+            // CustomFormData
+            // @ts-ignore
+            const from: { 'content-type': string } = body.getHeaders();
+            console.log(body)
+            headers.append('Content-Type', Object.values(from)[0]);
+          }
         }
       }
     }
@@ -508,7 +521,7 @@ export class QuestionIt {
 
   protected async handleResponse(with_request: boolean, response: Response) {
     // API always replies with JSON, even on error
-    const length = response.headers.get('Content-Length');
+    const length = Number(response.headers.get('Content-Length'));
     const result = await (length ? response.json() : Promise.resolve());
 
     if (response.ok) {

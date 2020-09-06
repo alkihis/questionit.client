@@ -78,6 +78,7 @@ export interface SentNotification {
 }
 
 export interface WrappedApiError {
+  type: 'QuestionItApiError';
   response: Response;
   result: QuestionItApiError;
 }

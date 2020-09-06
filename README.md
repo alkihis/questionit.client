@@ -143,3 +143,109 @@ You can now use this token with the instance.
 ```ts
 questionit.setAccessToken(result.token);
 ```
+
+## Errors
+
+When a non-success HTTP status code is given, the request will end in a rejected promise.
+
+The rejected promise contain the following interface:
+
+```ts
+interface WrappedApiError {
+  type: 'QuestionItApiError';
+  response: Response;
+  result: QuestionItApiError;
+}
+```
+
+```ts
+try {
+  const res = await client.get('users');
+} catch (e) {
+  if (QuestionIt.isApiError(e)) {
+    console.log(e.result);
+  }
+}
+```
+
+
+## Endpoint-based methods
+
+This Python library binds most of the endpoints of the API to specific methods, so you don't need to handle boring things by yourself.
+Their usage is pretty straight-forward and don't need to be explained (the method parameters are usually whats API is taking), except for a few methods (see below).
+
+The following methods exists:
+- `.verifyToken` -> `GET auth/token/verify`
+- `.revokeToken` -> `DELETE auth/token`
+- `.findUsers` -> `GET users/find`
+- `.getUser` -> `GET users/id/:id` and `GET users/slug/:slug`
+- `.getLogged` -> `GET users/logged`
+- `.setPinned` -> `PATCH questions/pin`
+- `.removePinned` -> `DELETE questions/pin`
+- `.setMutedWords` -> `POST users/blocked_words`
+- `.getMutedWords` -> `GET users/blocked_words`
+- `.ask` -> `POST questions`, `POST questions/anonymous` and `POST polls`
+- `.waitingQuestions` -> `GET questions/waiting`
+- `.reply` -> `POST questions/answer`
+- `.removeQuestion` -> `DELETE questions`
+- `.removeMutedQuestions` -> `DELETE questions/masked`
+- `.like` -> `POST likes`
+- `.unlike` -> `DELETE likes`
+- `.likersOf` -> `GET likes/list/:id`
+- `.likersIdsOf` -> `GET likes/ids/:id`
+- `.questionsOf` -> `GET questions`
+- `.askedQuestionsOf` -> `GET questions/sent`
+- `.homeTimeline` -> `GET questions/timeline`
+- `.ancestorsOf` -> `GET questions/tree/:root`
+- `.repliesOf` -> `GET questions/replies/:id`
+- `.relationshipWith` -> `GET relationships/with/:id`
+- `.relationshipBetween` -> `GET relationships/between`
+- `.follow` -> `POST relationships/:id`
+- `.unfollow` -> `DELETE relationships/:id`
+- `.followers` -> `GET relationships/followers`
+- `.followings` -> `GET relationships/followings`
+- `.block` -> `POST blocks/:id`
+- `.unblock` -> `DELETE blocks/:id`
+- `.getNotifications` -> `GET notifications`
+- `.removeNotification` -> `DELETE notifications/:id`
+- `.getNotificationCount` -> `GET notifications/count`
+- `.notificationsAllMarkAsSeen` -> `POST notifications/bulk_seen`
+
+### .getUser
+
+This method can fetch an user by user ID or by slug.
+
+It automatically choose between ID and slug regarding the given string ; if it's numeric, ID endpoint will be used.
+
+```ts
+client.getUser('2');  # calls users/id/2
+client.getUser('questionitspace');  # calls users/slug/questionitspace
+```
+
+### .ask
+
+You can attach multiple choices "polls" directly with this method.
+Just give a simple list of strings in the `poll` parameter.
+
+```ts
+client.ask('Cat or dog?', '2', true, '36', ['Cats!!', 'Dogs :(']);
+```
+
+### .reply
+
+When you reply to a question, you can attach medias (JPEG, PNG and GIF images).
+
+You must attach the picture in the `picture` parameter of `.reply` by following this example:
+
+```ts
+import fs from 'fs';
+
+const path = 'path-to-file.ext';
+
+client.reply(
+  'Yes, cats are the best.', 
+  '32',
+  false,
+  fs.createReadStream(path),
+);
+```
