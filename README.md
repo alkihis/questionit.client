@@ -15,7 +15,7 @@ npm i questionit
 
 ## Basics
 
-See API documentation for endpoint details.
+See [API documentation](https://docs.questionit.space) for endpoint details.
 
 **Everytime a link between a type bundled in this package and API return type is available, it will be presented into API docs.**
 
