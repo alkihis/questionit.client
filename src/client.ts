@@ -162,7 +162,7 @@ export class QuestionIt {
   /**
    * Get waiting questions. Cursor the result using {since} and {until}. Use {muted} to get muted waiting questions.
    */
-  waitingQuestions(since?: string, until?: string, size?: string, sort_by?: string, muted = false) : Promise<SentQuestion> {
+  waitingQuestions(since?: string, until?: string, size?: string, sort_by?: string, muted = false) : Promise<SentQuestion[]> {
     return this.get('questions/waiting', { params: { muted: String(muted), since, until, size, sort_by } });
   }
 
