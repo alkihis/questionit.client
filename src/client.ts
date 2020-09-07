@@ -1,4 +1,4 @@
-import { AccessTokenResult, WrappedApiError } from './types';
+import { AccessTokenResult, WrappedApiError, TokenVerifyResult, SentUser, SentQuestion, CursoredLikes, QuestionTree, SentRelationship, CursoredFollowers, CursoredFollowings, SentNotification, QuestionNotificationCount } from './types';
 import { ReadStream } from 'fs';
 
 // To make TypeScript and Node.js happy.
@@ -71,14 +71,14 @@ export class QuestionIt {
   /**
    * Check token validity, get logged user and verify token permissions.
    */
-  verifyToken() {
+  verifyToken() : Promise<TokenVerifyResult> {
     return this.get('auth/token/verify');
   } 
 
   /**
    * Cancel a token existence.
    */
-  revokeToken() {
+  revokeToken() : Promise<void> {
     return this.delete('auth/token');
   }
 
@@ -88,14 +88,14 @@ export class QuestionIt {
   /**
    * Find users using a query. Query can concern user slug or user name.
    */
-  findUsers(query: string, until?: string) {
+  findUsers(query: string, until?: string) : Promise<SentUser[]> {
     return this.get('users/find', { params: { q: query, until } })
   }
     
   /**
    * Get a single user. If you give a numberstring, ID will be supported. Otherwise, it will search by slug.
    */
-  getUser(user: string | number) {
+  getUser(user: string | number) : Promise<SentUser> {
     user = String(user);
 
     if (!isNaN(Number(user)))
@@ -107,32 +107,32 @@ export class QuestionIt {
   /**
    * Get logged user.
    */
-  getLogged() {
+  getLogged() : Promise<SentUser> {
     return this.get('users/logged');
   }
 
   /**
    * Set pinned question of user profile.
    */
-  setPinned(question_id: string | number) {
+  setPinned(question_id: string | number) : Promise<SentUser> {
     return this.patch('questions/pin', {params: { id: String(question_id) }});
   }
 
   /**
    * Remove pinned question of user profile.
    */
-  removePinned() {
+  removePinned() : Promise<SentUser> {
     return this.delete('questions/pin');
   }
 
   /**
    * Overwrite muted words for logged user.
    */
-  setMutedWords(words: string[]) {
+  setMutedWords(words: string[]) : Promise<string[]> {
     return this.post('users/blocked_words', { params: { words } });
   }
 
-  getMutedWords() {
+  getMutedWords() : Promise<string[]> {
     return this.get('users/blocked_words');
   }
 
@@ -142,7 +142,7 @@ export class QuestionIt {
   /**
    * Ask {user_id} as {anonymous}/logged with {content}.
    */
-  async ask(content: string, user_id: string, anonymous = true, in_reply_to?: string, poll?: string[]) {
+  async ask(content: string, user_id: string, anonymous = true, in_reply_to?: string, poll?: string[]) : Promise<{ success: true }> {
     const params: any = { content, to: user_id, in_reply_to };
 
     if (poll) {
@@ -162,14 +162,14 @@ export class QuestionIt {
   /**
    * Get waiting questions. Cursor the result using {since} and {until}. Use {muted} to get muted waiting questions.
    */
-  waitingQuestions(since?: string, until?: string, size?: string, sort_by?: string, muted = false) {
+  waitingQuestions(since?: string, until?: string, size?: string, sort_by?: string, muted = false) : Promise<SentQuestion> {
     return this.get('questions/waiting', { params: { muted: String(muted), since, until, size, sort_by } });
   }
 
   /**
    * Post a reply {answer} for {question_id}. If you want to attach a picture, give a valid readable stream/buffer in {picture} (do not give a filename!).
    */
-  reply(answer: string, question_id: string, post_on_twitter = false, picture?: Buffer | ReadStream) {
+  reply(answer: string, question_id: string, post_on_twitter = false, picture?: Buffer | ReadStream) : Promise<SentQuestion> {
     return this.post('questions/answer', { params: { 
       answer, 
       question: question_id, 
@@ -181,14 +181,14 @@ export class QuestionIt {
   /**
    * Remove question {question_id}
    */
-  removeQuestion(question_id: string) {
+  removeQuestion(question_id: string) : Promise<void> {
     return this.delete('questions', { params: { question: question_id } });
   }
 
   /**
    * Remove every muted question.
    */
-  removeMutedQuestions() {
+  removeMutedQuestions() : Promise<void> {
     return this.delete('questions/masked');
   }
 
@@ -198,28 +198,28 @@ export class QuestionIt {
   /**
    * Like {question_id}.
    */
-  like(question_id: string) {
+  like(question_id: string) : Promise<SentQuestion> {
     return this.post('likes/' + question_id);
   } 
 
   /**
    * Unlike {question_id}.
    */
-  unlike(question_id: string) {
+  unlike(question_id: string) : Promise<SentQuestion> {
     return this.delete('likes/' + question_id);
   } 
   
   /**
    * Get user objects of likers of question {question_id}. Cursor the result with {since} and {until}.
    */
-  likersOf(question_id: string, since?: string, until?: string, size?: string) {
+  likersOf(question_id: string, since?: string, until?: string, size?: string) : Promise<CursoredLikes<SentUser>> {
     return this.get('likes/list/' + question_id , { params: { since, until, size } });
   }
 
   /**
    * Get user IDs of likers of question {question_id}. Cursor the result with {since} and {until}.
    */
-  likersIdsOf(question_id: string, since?: string, until?: string, size?: string) {
+  likersIdsOf(question_id: string, since?: string, until?: string, size?: string) : Promise<CursoredLikes<string>> {
     return this.get('likes/ids/' + question_id , { params: { since, until, size } });
   }
     
@@ -229,35 +229,35 @@ export class QuestionIt {
   /**
    * Get replied questions of user {user_id}. Cursor the result using {since} and {until}.
    */
-  questionsOf(user_id?: string, since?: string, until?: string, size?: string, sort_by?: string) {
+  questionsOf(user_id?: string, since?: string, until?: string, size?: string, sort_by?: string) : Promise<SentQuestion[]> {
     return this.get('questions', { params: { user_id, since, until, size, sort_by } });
   }
 
   /**
    * Get asked questions of user {user_id}. Cursor the result using {since} and {until}.
    */
-  askedQuestionsOf(user_id?: string, since?: string, until?: string, size?: string, sort_by?: string) {
+  askedQuestionsOf(user_id?: string, since?: string, until?: string, size?: string, sort_by?: string) : Promise<SentQuestion[]> {
     return this.get('questions/sent', { params: { user_id, since, until, size, sort_by } });
   }
 
   /**
    * Get timeline of logged user. Cursor the result using {since} and {until}.
    */
-  homeTimeline(since?: string, until?: string, size?: string, sort_by?: string) {
+  homeTimeline(since?: string, until?: string, size?: string, sort_by?: string) : Promise<SentQuestion[]> {
     return this.get('questions/timeline', { params: { since, until, size, sort_by } });
   }
 
   /**
    * Get ancestors of questions {question_id}.
    */
-  ancestorsOf(question_id: string, size?: string) {
+  ancestorsOf(question_id: string, size?: string) : Promise<QuestionTree> {
     return this.get('questions/tree/' + question_id, { params: { size } });
   }
 
   /**
    * Get replies of question {question_id}. Cursor the result using {since} and {until}.
    */
-  repliesOf(question_id: string, since?: string, until?: string, size?: string, sort_by?: string) {
+  repliesOf(question_id: string, since?: string, until?: string, size?: string, sort_by?: string) : Promise<SentQuestion[]> {
     return this.get('questions/replies/' + question_id, { params: { size, since, until, sort_by } });
   }
 
@@ -267,56 +267,56 @@ export class QuestionIt {
   /**
    * Get the relationship object between logged user and another user {user_id}
    */
-  relationshipWith(user_id: string) {
+  relationshipWith(user_id: string) : Promise<SentRelationship> {
     return this.get('relationships/with/' + user_id);
   }
 
   /**
    * Get the relationship object between source user {source_user_id} and target user {target_user_id}
    */
-  relationshipBetween(source_user_id: string, target_user_id: string) {
+  relationshipBetween(source_user_id: string, target_user_id: string) : Promise<SentRelationship> {
     return this.get('relationships/between', { params: { source: source_user_id, target: target_user_id } });
   }
 
   /**
    * Follow {user_id} from logged user.
    */
-  follow(user_id: string) {
+  follow(user_id: string) : Promise<SentRelationship> {
     return this.post('relationships/' + user_id);
   }
 
   /**
    * Unollow {user_id} from logged user.
    */
-  unfollow(user_id: string) {
+  unfollow(user_id: string) : Promise<SentRelationship> {
     return this.delete('relationships/' + user_id);
   }
 
   /**
    * Block {user_id} from logged user.
    */
-  block(user_id: string) {
+  block(user_id: string) : Promise<SentRelationship> {
     return this.post('blocks/' + user_id);
   }
 
   /**
    * Unlock {user_id} from logged user.
    */
-  unblock(user_id: string) {
+  unblock(user_id: string) : Promise<SentRelationship> {
     return this.delete('blocks/' + user_id);
   }
 
   /**
    * Get followers of logged user. Cursor the result using {since} and {until}.
    */
-  followers(since?: string, until?: string, size?: string) {
+  followers(since?: string, until?: string, size?: string) : Promise<CursoredFollowers> {
     return this.get('relationships/followers', { params: { since, until, size } });
   }
 
   /**
    * Get followings of logged user. Cursor the result using {since} and {until}.
    */
-  followings(since?: string, until?: string, size?: string) {
+  followings(since?: string, until?: string, size?: string) : Promise<CursoredFollowings> {
     return this.get('relationships/followings', { params: { since, until, size } });
   }
 
@@ -326,28 +326,28 @@ export class QuestionIt {
   /**
    * Get notifications of logged user. Cursor the result using {since} and {until}.
    */
-  getNotifications(mark_as_seen = true, since?: string, until?: string, sort_by?: string) {
+  getNotifications(mark_as_seen = true, since?: string, until?: string, sort_by?: string) : Promise<SentNotification[]> {
     return this.get('notifications', { params: { mark_as_seen: String(mark_as_seen), since, until, sort_by } });
   }
 
   /**
    * Remove {id}. (You can specify "all" to delete every notification).
    */
-  removeNotification(id: string) {
+  removeNotification(id: string) : Promise<QuestionNotificationCount> {
     return this.delete('notifications/' + id);
   }
 
   /**
    * Get waiting questions and unseen notification counts.
    */
-  getNotificationCount() {
+  getNotificationCount() : Promise<QuestionNotificationCount> {
     return this.get('notifications/count');
   }
 
   /**
    * Mark all notifications as seen.
    */
-  notificationsAllMarkAsSeen() {
+  notificationsAllMarkAsSeen() : Promise<QuestionNotificationCount> {
     return this.post('notifications/bulk_seen');
   }
 
@@ -500,7 +500,6 @@ export class QuestionIt {
             // CustomFormData
             // @ts-ignore
             const from: { 'content-type': string } = body.getHeaders();
-            console.log(body)
             headers.append('Content-Type', Object.values(from)[0]);
           }
         }
